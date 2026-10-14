@@ -109,12 +109,26 @@ begin
     (select count(*) from bot_users),(select count(*) from bot_checks),
     (select count(*) from bot_checks where status='pending'),(select count(*) from bot_topups where status='pending'),
     (select coalesce(sum(credits),0) from bot_users),(select coalesce(sum(amount_rupiah),0) from bot_topups where status='approved')) into reply_text;
+ elsif p_action='user' and p_admin then
+   select format('User %s | Kredit %s | Gratis tersisa %s | Total cek %s | Berhasil %s | Top up pending %s',
+    telegram_id,credits,case when quota_day=d then 3-free_used else 3 end,
+    (select count(*) from bot_checks where telegram_id=b.telegram_id),
+    (select count(*) from bot_checks where telegram_id=b.telegram_id and status='success'),
+    (select count(*) from bot_topups where telegram_id=b.telegram_id and status='pending'))
+   into reply_text from bot_users b where telegram_id=(p_args->>'user')::bigint;
+   reply_text := coalesce(reply_text,'Pengguna tidak ditemukan.');
  elsif p_action='pending' and p_admin then
    select coalesce(string_agg(format('#%s user=%s kredit=%s Rp%s',id,telegram_id,credits,amount_rupiah),E'\n'),'Tidak ada top up pending.') into reply_text
    from (select * from bot_topups where status='pending' order by id limit 20) q;
  elsif p_action='history' then
    select coalesce(string_agg(line,E'\n'),'Belum ada riwayat.') into reply_text from (
-    select format('%s | %s | %s kredit',created_at,reason,delta) line from bot_ledger where telegram_id=p_user order by id desc limit 15
+    select line from (
+     select created_at,format('%s | %s | %s kredit',created_at,reason,delta) line from bot_ledger where telegram_id=p_user
+     union all
+     select created_at,format('%s | cek gratis | %s',created_at,status) from bot_checks where telegram_id=p_user and not charged_credit
+     union all
+     select created_at,format('%s | top up #%s | Rp%s | %s',created_at,id,amount_rupiah,status) from bot_topups where telegram_id=p_user
+    ) history_rows order by created_at desc limit 15
    ) q;
  elsif p_action='stats' then
    select format('Kredit: %s | Gratis tersisa hari ini: %s | Total cek: %s | Cek berhasil: %s',u.credits,3-u.free_used,count(*),count(*) filter(where status='success')) into reply_text from bot_checks where telegram_id=p_user;

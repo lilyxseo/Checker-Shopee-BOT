@@ -3,6 +3,8 @@ begin;
 do $$
 declare r jsonb; balance bigint; tid bigint; i int;
 begin
+ assert ('2026-10-14 16:59:59+00'::timestamptz at time zone 'Asia/Jakarta')::date='2026-10-14'::date,'before WIB midnight';
+ assert ('2026-10-14 17:00:00+00'::timestamptz at time zone 'Asia/Jakarta')::date='2026-10-15'::date,'at WIB midnight';
  -- Registration and lazy WIB midnight reset.
  perform bot_command(10001,80001,'stats');
  update bot_users set free_used=3,quota_day=(now() at time zone 'Asia/Jakarta')::date-1,last_request=null where telegram_id=80001;

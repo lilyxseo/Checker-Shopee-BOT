@@ -29,7 +29,7 @@ Parser/security tests can also run with Node 24: `node --test tests/core.test.ts
 
 Users: `/start`, `/saldo`, `/stats`, `/history`, `/topup 100`, `/cek 6281234567890`.
 
-Admins: `/admin`, `/pending`, `/approve ID`, `/reject ID`, `/grant USER_ID PHONE EVIDENCE_REF`, `/revoke USER_ID PHONE`.
+Admins: `/admin`, `/user USER_ID`, `/pending`, `/approve ID`, `/reject ID`, `/grant USER_ID PHONE EVIDENCE_REF`, `/revoke USER_ID PHONE`.
 
 Topups cost Rp50 per credit. Admins must independently verify payment before approving; requests alone are not proof of payment. Pending requests show their amount and user ID. Users can inspect credits and ledger after approval.
 

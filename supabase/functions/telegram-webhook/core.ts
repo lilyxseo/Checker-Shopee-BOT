@@ -11,6 +11,10 @@ export function parse(text: string) {
     if (a.length !== 1 || !positive(a[0]) || Number(a[0]) > 1000000) throw new Error('Format: /topup 100 (1–1000000 kredit)');
     return { action: 'topup', args: { credits: Number(a[0]) } };
   }
+  if (command === '/user') {
+    if (a.length !== 1 || !positive(a[0])) throw new Error('Format: /user USER_ID');
+    return { action: 'user', args: { user: a[0] } };
+  }
   if (['/approve', '/reject'].includes(command)) {
     if (a.length !== 1 || !positive(a[0])) throw new Error('Gunakan ID top up yang valid.');
     return { action: command.slice(1), args: { id: a[0] } };
@@ -33,4 +37,4 @@ export async function secretEqual(a: string, b: string) {
   const [x,y] = await Promise.all([hash(a),hash(b)]);
   let diff=0; for(let i=0;i<x.length;i++) diff |= x[i]^y[i]; return diff===0;
 }
-export const adminActions = new Set(['approve','reject','grant','revoke','admin','pending']);
+export const adminActions = new Set(['approve','reject','grant','revoke','admin','pending','user']);
