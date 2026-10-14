@@ -1,0 +1,3 @@
+project_id = "checker-shopee-bot"
+[functions.telegram-webhook]
+verify_jwt = false # Telegram authentication is enforced by the secret header.
