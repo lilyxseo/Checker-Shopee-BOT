@@ -23,7 +23,7 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 
 python3 tests/concurrency.py
 ```
 
-Parser/security tests can also run with Node 24: `node --test tests/core.test.ts`. SQL tests cover registration, WIB date reset, free/paid usage, insufficient credits, duplicate updates, repeated approvals/refunds, rejection, and consent authorization. SQL tests roll back all changes. CI runs type checks and database tests; no deployment job is configured. The concurrency test uses separate PostgreSQL sessions for duplicate debits and simultaneous approvals; it must also pass before production approval.
+Parser/security tests can also run with Node 24: `node --test tests/core.test.ts`. SQL tests cover registration, WIB date reset, free/paid usage, insufficient credits, duplicate updates, repeated approvals/refunds, rejection, and consent authorization. SQL tests roll back all changes. CI runs Deno type checks and database tests against disposable PostgreSQL 17 with Supabase API roles; no deployment job is configured. The concurrency test uses separate PostgreSQL sessions for duplicate debits and simultaneous approvals; it must also pass before production approval.
 
 ## Commands
 

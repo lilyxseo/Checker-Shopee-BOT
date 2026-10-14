@@ -1,8 +1,30 @@
 name: test
 on: [push, pull_request]
+concurrency:
+  group: test-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 54322:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 54322
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
@@ -10,9 +32,7 @@ jobs:
           deno-version: v2.x
       - run: deno check supabase/functions/telegram-webhook/index.ts
       - run: deno test --allow-read tests/core.test.ts
-      - uses: supabase/setup-cli@v1
-        with:
-          version: 2.54.11
-      - run: supabase start
-      - run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/bot.sql
+      - run: psql -v ON_ERROR_STOP=1 -f tests/bootstrap.sql
+      - run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610140001_bot.sql
+      - run: psql -v ON_ERROR_STOP=1 -f supabase/tests/bot.sql
       - run: python3 tests/concurrency.py

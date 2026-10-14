@@ -38,6 +38,8 @@ begin
  -- Failed check returns exactly one credit.
  update bot_users set last_request=null where telegram_id=80001;
  perform bot_command(10300,80001,'check','{"phone":"6281234567890"}');
+ perform bot_finish(10300,'unknown');
+ assert (select credits=9 from bot_users where telegram_id=80001),'unknown must stay charged';
  perform bot_finish(10300,'failed'); perform bot_finish(10300,'failed');
  assert (select credits=10 from bot_users where telegram_id=80001),'refund failed';
  -- A late free-check failure must not decrement the new day's quota.

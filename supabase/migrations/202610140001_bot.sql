@@ -148,7 +148,7 @@ begin
  if not found then raise exception 'check_missing'; end if;
  perform 1 from bot_users where telegram_id=c.telegram_id for update;
  select * into c from bot_checks where update_id=p_update for update;
- if c.status <> 'pending' then return; end if;
+ if c.status in ('success','failed') or (c.status='unknown' and p_status='unknown') then return; end if;
  update bot_checks set status=p_status where update_id=p_update;
  -- Unknown outcomes stay charged and require reconciliation; never blindly repeat provider calls.
  if p_status='failed' then
