@@ -31,7 +31,7 @@ jobs:
         with:
           deno-version: v2.x
       - run: deno check supabase/functions/telegram-webhook/index.ts
-      - run: deno test --allow-read tests/core.test.ts
+      - run: deno test --allow-read tests/core.test.ts tests/provider.test.ts
       - run: psql -v ON_ERROR_STOP=1 -f tests/bootstrap.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610140001_bot.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/tests/bot.sql
