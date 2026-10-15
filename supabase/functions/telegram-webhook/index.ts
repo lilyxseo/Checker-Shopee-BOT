@@ -1,4 +1,5 @@
 import { parse, validUpdate, secretEqual, adminActions } from './core.ts';
+import { checkShopeePay } from './provider.ts';
 const required = (key: string) => { const v=Deno.env.get(key); if(!v) throw new Error(`Missing ${key}`); return v; };
 const secret=required('TELEGRAM_WEBHOOK_SECRET');
 const token=required('TELEGRAM_BOT_TOKEN');
@@ -13,11 +14,6 @@ async function rpc(name: string, args: unknown) {
 async function send(chat: number, text: string) {
   const r=await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chat,text:text.slice(0,4000),protect_content:true}),signal:AbortSignal.timeout(10000)});
   if(!r.ok || !(await r.json()).ok) throw new Error('telegram_error');
-}
-// Intentionally disabled until the authorized provider contract is supplied and implemented.
-// Do not guess cekapi endpoint, authentication, payload, or success semantics.
-async function providerCheck(_phone: string, _id: number): Promise<{status:'success'|'failed'|'unknown';message:string}> {
-  return {status:'failed',message:'Integrasi cekapi belum dikonfigurasi; kuota/kredit dikembalikan.'};
 }
 Deno.serve(async req=>{
   if(req.method!=='POST') return new Response('Method not allowed',{status:405});
@@ -44,7 +40,11 @@ Deno.serve(async req=>{
     const result=await rpc('bot_command',{p_update:update.update_id,p_user:user,p_action:command.action,p_args:command.args,p_admin:admin});
     if(result.duplicate) return new Response('OK');
     if(result.check){
-      const outcome=await providerCheck((command.args as {phone:string}).phone,update.update_id);
+      const outcome=await checkShopeePay((command.args as {phone:string}).phone, {
+        enabled: Deno.env.get('CEKAPI_ENABLED'),
+        apiKey: Deno.env.get('CEKAPI_API_KEY'),
+        baseUrl: Deno.env.get('CEKAPI_BASE_URL'),
+      });
       await rpc('bot_finish',{p_update:update.update_id,p_status:outcome.status});
       await send(user,outcome.message);
     } else await send(user,result.reply);
